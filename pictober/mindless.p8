@@ -47,18 +47,46 @@ end
 select_button(1)
 
 function _update()
+ update_input()
+ update_tic()
+end
 
+function update_input()
 	if btnp(2) then select_button(sel_idx-1) end
 	if btnp(3) then select_button(sel_idx+1) end
 
-	if btn(4) or btn(5) then
+	if btnp(4) or btnp(5) then
 	 controls[sel_idx].on = true
+	 try_remove_tic(sel_idx)
 	else
 	 controls[sel_idx].on = false
 	end
-	
-	if rnd()>0.95 then
-		add_tic(ceil(rnd(5)).."")
+end
+
+function try_remove_tic(sel_idx)
+  local first = ticker[1]
+  if first ~= nil and
+   first.lbl == ""..sel_idx then
+   del(ticker, first)
+  end
+--[[
+	for t in all(ticker) do
+		if t.lbl == ""..sel_idx then
+			del(ticker,t)
+		end
+	end
+]]	
+end
+
+local time_to_tic = 0
+
+function update_tic()
+ time_to_tic -= 0.025
+ if time_to_tic <= 0 then
+		if rnd()>0.95 then
+			add_tic(ceil(rnd(5)).."")
+			time_to_tic = 1
+		end
  end
  --move ticker symbols
  for tic in all(ticker) do
