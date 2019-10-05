@@ -8,17 +8,27 @@ __lua__
 ░={}
 
 function _init()
- for y=127,0,-1 do
+ for y=0,127 do
 		for x=0,127 do
-		 
-   set_val(x,y,flr(y*100/128))
+		 local n1=get_val(x-1,y)
+		 local n2=get_val(x,y-1)
+		 local v=combine(n1,n2)
+		 set_val(x,y,v)
+   --set_val(x,y,flr(y*100/128))
   end
  end
  paint()
 end
 
+function combine(n1,n2)
+ local degrade=rnd()*0.01;
+	return (1-degrade)*(n1+n2)/2
+end
+
 function get_val(x,y)
---	if x < 
+	if (x<=0 and y<=0) return 100
+	if (x<0) return get_val(0,y-1)
+	if (y<0) return get_val(x-1,0)
 
  local v=░[x..":"..y]
  if (v==nil) v=0
@@ -47,7 +57,7 @@ function get_col(x,y)
  local da=tv-bv
  local db=v-bv
  local r=db/da
- if rnd(4) < r then
+ if rnd() < r then
  	return 😐[tband]
  else
  	return 😐[tband-1]
