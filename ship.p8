@@ -2,14 +2,17 @@ pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
 -- ship
-draw_bb=true
+draw_bb=false--true
 local pl={x=60,y=60,w=8,h=6,tw=2,th=2,spr=16}
 local cam={x=0,y=0}
 local m_offs_x=127
+local pl_bul={}
+local pl_shot=0
 
 function _update()
  upd_cam()
  upd_ctrl()
+ upd_obj()
 end
 
 function upd_cam()
@@ -19,11 +22,22 @@ function upd_cam()
 end
 
 function upd_ctrl()
+ pl_shot-=1
  local pl_spd=3 
  if (btn(0)) trymove(-pl_spd,0)
  if (btn(1)) trymove( pl_spd,0)
  if (btn(2)) trymove(0,-pl_spd)
  if (btn(3)) trymove(0, pl_spd)
+ if (btn(4)) tryshoot()
+end
+
+function tryshoot()
+ if (pl_shot>0) return
+ pl_shot=16
+ local nb={x=pl.x+8,y=pl.y,spd=4,
+ 	spr=2,tw=1,th=1,w=8,h=3
+ } 
+ add(pl_bul,nb)
 end
 
 function trymove(dx,dy)
@@ -45,6 +59,12 @@ function trymove(dx,dy)
  
  if (coll)	 pl.x-=dx pl.y-=dy
  --pl.x=flr(pl.x) pl.y=flr(pl.y)
+end
+
+function upd_obj()
+ for b in all(pl_bul) do
+		b.x += b.spd
+ end
 end
 
 function mgetoff(x,y)
@@ -71,6 +91,9 @@ function _draw()
  rectfill(cam.x,cam.y,cam.x+127,cam.y+127,1)
  map(0,0,m_offs_x,0)
  dspr(pl)
+ for b in all(pl_bul) do
+  dspr(b)
+ end
  camera()
 -- print(flr(pl.x/8)..","..flr(pl.y/8).." -> "..mgetoff(flr(pl.x/8),flr(pl.y/8)))
 end
