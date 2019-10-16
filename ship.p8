@@ -215,8 +215,9 @@ function coll_m(x,y)
 end
 
 function draw_game()
+ rectfill(scr.x0,scr.y0,scr.x1,scr.y1,1)
+ dstars()
  camera(cam.x,cam.y)
- rectfill(cam.x+scr.x0,cam.y+scr.y0,cam.x+scr.x1,cam.y+scr.y1,1)
  map(0,0,m_offs_x,0)
  if(not pl.dead) dspr(pl)
  for b in all(pl_bul) do
@@ -232,6 +233,26 @@ function draw_game()
 -- local t=mgetoff(flr(pl.x/8),flr(pl.y/8))
 -- print(flr(pl.x/8)..","..flr(pl.y/8).." -> "..t.." f: "..fget(t))
 --cls() print(debug.tstr(vfx))
+end
+
+function r_pick(t)
+ local i=flr(rnd(#t)+1)
+ return t[i]
+end
+
+local stars={}
+local s_c={6,6,7,7,12,10}
+for i=1,50 do
+ add(stars,{x=rnd()*scr.x1,
+  y=rnd()*scr.y1, c=r_pick(s_c)})
+end
+
+function dstars()
+ for s in all(stars) do
+  pset(s.x,s.y,s.c)
+  s.x -= 0.05
+  if (s.x < -1) s.x += 128
+ end
 end
 
 function dspr(o)
