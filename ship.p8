@@ -241,16 +241,20 @@ function r_pick(t)
 end
 
 local stars={}
-local s_c={6,6,7,7,12,10}
-for i=1,50 do
- add(stars,{x=rnd()*scr.x1,
-  y=rnd()*scr.y1, c=r_pick(s_c)})
+local s_c={7,7,12,10}
+for i=1,100 do
+ local s={x=rnd()*scr.x1,
+  y=rnd()*scr.y1, c=r_pick(s_c),
+  v=rnd(0.3)+0.03
+  }
+  if(rnd()>0.65) s.c=6 s.v=1
+ add(stars,s)
 end
 
 function dstars()
  for s in all(stars) do
   pset(s.x,s.y,s.c)
-  s.x -= 0.05
+  s.x -= s.v
   if (s.x < -1) s.x += 128
  end
 end
