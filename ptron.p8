@@ -8,9 +8,10 @@ local pl={x=64,y=64,spr=1,shot=10,w=8,h=8}
 local pl_last={x=1,y=0}
 scr={x0=0,x1=128,y0=0,y1=128}
 pl_bul={}
+ene_obj={}
 
 menuitem(1,"map")
-menuitem(2,"configuration")
+menuitem(2,"reconfig")
 
 -- returns coord in tilemap pixels for the tile coords in the room
 function room_coord(rm,tx,ty)
@@ -32,13 +33,21 @@ function _draw()
  for b in all(pl_bul) do
   print('o',b.x,b.y,15)
  end
+ for o in all(ene_obj) do
+  dspr(o)
+ end
  color(3)
  print("pl "..pl.x..","..pl.y.." last "..pl_last.x..","..pl_last.y.." shot "..pl.shot,0,120)
 end
 
 function dspr(o)
  if(o.tw==nil) o.tw,o.th=1,1
- spr(o.spr,o.x-o.tw*4,o.y-o.th*4,o.tw,o.th)
+ local fx,fy=o.x-o.tw*4,o.y-o.th*4
+ if type(o.spr)=='string' then
+  	print(o.spr,fx,fy,o.c)
+ else
+	 spr(o.spr,fx,fy,o.tw,o.th)
+	end
  if draw_bb then
 	 color(11)
 	 rect(o.x-o.w/2,o.y-o.h/2,o.x+o.w/2,o.y+o.h/2)
@@ -107,8 +116,92 @@ end
 
 function _update()
  upd_player()
+ upd_enemy()
+ upd_spawn()
 end
 
+local e1={spr='🐱',c=8}
+
+--local spawn_q={e1,e1,e2}
+local spawn_between=30
+local spawn_time=10
+function upd_spawn()
+ spawn_time-=1
+ if(spawn_time <= 0) spawn(e1)
+end
+
+function v2_dist(o1,o2)
+ local dx=o1.x-o2.x
+ local dy=o1.y-o2.y
+ return sqrt(dx*dx+dy*dy)
+end
+
+function spawn(tpl_e)
+ local ne=tools.deepassign(tpl_e)
+ repeat
+	 ne.x = rndi(10,118)
+	 ne.y = rndi(10,118)
+ until v2_dist(ne,pl) > 20
+ spawn_time=spawn_between
+ add(ene_obj, ne)
+end
+
+function rndi(a,b)
+ return flr(rnd()*(b-a+1)+a)
+end
+
+-->8
+
+tools = {}
+function tools.assign(t, initial)
+ initial = initial or {}
+ for k, v in pairs(t) do
+  initial[k] = v
+ end
+ return initial
+end
+function tools.deepassign(t, initial)
+ initial = initial or {}
+ for k, v in pairs(t) do
+  if type(v) == "table" then
+   initial[k] = tools.deepassign(v)
+  else
+   initial[k] = v
+  end
+ end
+ return initial
+end
+
+debug = {}
+function debug.tstr(t, indent)
+ indent = indent or 0
+ local indentstr = ''
+ for i=0,indent do
+  indentstr = indentstr .. ' '
+ end
+ local str = ''
+ for k, v in pairs(t) do
+  if type(v) == 'table' then
+   str = str .. indentstr .. k .. '\n' .. debug.tstr(v, indent + 1) .. '\n'
+  else
+   str = str .. indentstr .. tostr(k) .. ': ' .. tostr(v) .. '\n'
+  end
+ end
+  str = sub(str, 1, -2)
+ return str
+end
+function debug.print(...)
+ printh("\n")
+ for v in all{...} do
+  if type(v) == "table" then
+   printh(debug.tstr(v))
+  elseif type(v) == "nil" then
+    printh("nil")
+  else
+   printh(v)
+  end
+ end
+end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
