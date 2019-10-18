@@ -1,7 +1,8 @@
 pico-8 cartridge // http://www.pico-8.com
 version 18
 __lua__
--- ptron
+--p-tron
+--by kathrrak
 
 room=0 -- 16x16
 local pl={x=64,y=64,spr=1,shot=10,w=8,h=8}
@@ -21,129 +22,13 @@ function room_coord(rm,tx,ty)
  return rx,ry
 end
 
-function draw_room(rm)
- local rx,ry=room_coord(rm,0,0)
- map(rx,ry,0,0,16,16)
-end
 
-function _draw()
- cls()
- draw_room(room)
- dspr(pl)
- for b in all(pl_bul) do
-  print('o',b.x,b.y,15)
- end
- for o in all(ene_obj) do
-  dspr(o)
- end
- color(3)
- print("pl "..pl.x..","..pl.y.." last "..pl_last.x..","..pl_last.y.." shot "..pl.shot,0,120)
-end
-
-function dspr(o)
- if(o.tw==nil) o.tw,o.th=1,1
- local fx,fy=o.x-o.tw*4,o.y-o.th*4
- if type(o.spr)=='string' then
-  	print(o.spr,fx,fy,o.c)
- else
-	 spr(o.spr,fx,fy,o.tw,o.th)
-	end
- if draw_bb then
-	 color(11)
-	 rect(o.x-o.w/2,o.y-o.h/2,o.x+o.w/2,o.y+o.h/2)
- end
-end
-
-function upd_ctrl()
- local pl_prev=pl_last
- pl_last={x=0,y=0}
- if (pl.shot~=nil and pl.shot>0) pl.shot-=1
- local pl_spd=1
- if (btn(0)) trymove(-pl_spd,0)
- if (btn(1)) trymove( pl_spd,0)
- if (btn(2)) trymove(0,-pl_spd)
- if (btn(3)) trymove(0, pl_spd)
- if(btn(5) or (pl_last.x==0 and pl_last.y==0)) then
-  pl_last=pl_prev
- end
- if (btn(4)) tryshoot()
-end
-
-function trymove(dx,dy)
- local coll=false
- pl.x += dx pl.y += dy
- 
- local x0,x1=pl.x-pl.w/2,pl.x+pl.w/2
- local y0,y1=pl.y-pl.h/2,pl.y+pl.h/2
- -- world bounds
-	if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
-	 coll=true
-	end
- if coll then
- 	pl.x-=dx pl.y-=dy
- else 
- 	pl_last.x += dx
- 	pl_last.y += dy 	
- end
-end
-
-function tryshoot()
- if (pl.shot>0 or pl.dead) return
- pl.shot=5
- local nb={x=pl.x,y=pl.y,spd=pl_last,
- 	spr=2,tw=1,th=1,w=8,h=3
- } 
- nb.w2=nb.w/2 nb.h2=nb.h/2 
- local pl_bul_spd=3
- if (nb.spd.x~=0) nb.spd.x=sgn(nb.spd.x)*pl_bul_spd
- if (nb.spd.y~=0) nb.spd.y=sgn(nb.spd.y)*pl_bul_spd
- add(pl_bul,nb)
- sfx(1)
-end
-
-function upd_player()
- upd_ctrl() 
- upd_bul()
-end
-
-function upd_bul()
- for b in all(pl_bul) do
-		b.x += b.spd.x
-		b.y += b.spd.y
---		if (b.x > cam.x+127) del(pl_bul,b)
-	end
-end
-
-function _update()
- upd_player()
- upd_enemy()
- upd_spawn()
-end
-
-local e1={spr='🐱',c=8}
-
---local spawn_q={e1,e1,e2}
-local spawn_between=30
-local spawn_time=10
-function upd_spawn()
- spawn_time-=1
- if(spawn_time <= 0) spawn(e1)
-end
+local e1={spr=16,w=7,h=7}
 
 function v2_dist(o1,o2)
  local dx=o1.x-o2.x
  local dy=o1.y-o2.y
  return sqrt(dx*dx+dy*dy)
-end
-
-function spawn(tpl_e)
- local ne=tools.deepassign(tpl_e)
- repeat
-	 ne.x = rndi(10,118)
-	 ne.y = rndi(10,118)
- until v2_dist(ne,pl) > 20
- spawn_time=spawn_between
- add(ene_obj, ne)
 end
 
 function rndi(a,b)
@@ -202,6 +87,156 @@ function debug.print(...)
   end
  end
 end
+
+
+
+
+
+function _update()
+ upd_player()
+ upd_enemy()
+ upd_spawn()
+end
+
+function upd_ctrl()
+ local pl_prev=pl_last
+ pl_last={x=0,y=0}
+ if (pl.shot~=nil and pl.shot>0) pl.shot-=1
+ local pl_spd=1
+ if (btn(0)) trymove(-pl_spd,0)
+ if (btn(1)) trymove( pl_spd,0)
+ if (btn(2)) trymove(0,-pl_spd)
+ if (btn(3)) trymove(0, pl_spd)
+ if(btn(5) or (pl_last.x==0 and pl_last.y==0)) then
+  pl_last=pl_prev
+ end
+ if (btn(4)) tryshoot()
+end
+ 
+
+function trymove(dx,dy)
+ local coll=false
+ pl.x += dx pl.y += dy
+ 
+ local x0,x1=pl.x-pl.w/2,pl.x+pl.w/2
+ local y0,y1=pl.y-pl.h/2,pl.y+pl.h/2
+ -- world bounds
+  if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
+   coll=true
+  end
+ if coll then
+  pl.x-=dx pl.y-=dy
+ else 
+  pl_last.x += dx
+  pl_last.y += dy   
+ end
+end
+
+function tryshoot()
+ if (pl.shot>0 or pl.dead) return
+ pl.shot=5
+ local nb={x=pl.x,y=pl.y,spd=pl_last,
+  spr=2,tw=1,th=1,w=8,h=3
+ } 
+ nb.w2=nb.w/2 nb.h2=nb.h/2 
+ local pl_bul_spd=3
+ if (nb.spd.x~=0) nb.spd.x=sgn(nb.spd.x)*pl_bul_spd
+ if (nb.spd.y~=0) nb.spd.y=sgn(nb.spd.y)*pl_bul_spd
+ add(pl_bul,nb)
+ sfx(1)
+end
+
+function upd_player()
+ upd_ctrl() 
+ upd_bul()
+end
+
+function upd_bul()
+ for b in all(pl_bul) do
+    b.x += b.spd.x
+    b.y += b.spd.y
+--    if (b.x > cam.x+127) del(pl_bul,b)
+  end
+end
+
+--local spawn_q={e1,e1,e2}
+local spawn_between=30
+local spawn_time=10
+local spawn_max=8
+function upd_spawn()
+ spawn_time-=1
+ if(spawn_time <= 0) spawn(e1)
+end
+
+function spawn(tpl_e)
+ if(#ene_obj >= spawn_max) return
+ local ne=tools.deepassign(tpl_e)
+ repeat
+   ne.x = rndi(10,118)
+   ne.y = rndi(10,118)
+ until v2_dist(ne,pl) > 20
+ spawn_time=spawn_between
+ add(ene_obj, ne)
+end
+
+
+function upd_enemy()
+ for o in all(ene_obj) do
+  for b in all(pl_bul) do
+	  if coll_pt_obj(b,o) then
+	   kill_obj(o)
+	   del(pl_bul,b)
+	  end
+  end
+ end
+end
+
+-- check pt vs obj box
+function coll_pt_obj(pt,o)
+ local x0,x1=o.x-o.w/2,o.x+o.w/2
+ local y0,y1=o.y-o.h/2,o.y+o.h/2
+ if (pt.x>x0 and pt.x<x1 and pt.y>y0 and pt.y<y1) return true
+ return false
+end
+
+function kill_obj(o)
+ del(ene_obj, o)
+end
+
+function _draw()
+ cls()
+ draw_room(room)
+ dspr(pl)
+ for b in all(pl_bul) do
+  print('o',b.x,b.y,15)
+ end
+ for o in all(ene_obj) do
+  dspr(o)
+ end
+ color(3)
+ print("pl "..pl.x..","..pl.y.." last "..pl_last.x..","..pl_last.y.." shot "..pl.shot,0,120)
+end
+
+function dspr(o)
+ if(o.tw==nil) o.tw,o.th=1,1
+ local fx,fy=o.x-o.tw*4,o.y-o.th*4
+-- if type(o.spr)=='string' then
+--   print(o.spr,fx,fy,o.c)
+ --else
+   spr(o.spr,fx,fy,o.tw,o.th)
+ --end
+ if draw_bb then
+  color(11)
+  rect(o.x-o.w/2,o.y-o.h/2,o.x+o.w/2,o.y+o.h/2)
+ end
+end
+
+function draw_room(rm)
+ local rx,ry=room_coord(rm,0,0)
+ map(rx,ry,0,0,16,16)
+end
+
+
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
