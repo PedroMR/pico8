@@ -107,7 +107,7 @@ function upd_ctrl()
  if (btn(1)) trymove( pl_spd,0)
  if (btn(2)) trymove(0,-pl_spd)
  if (btn(3)) trymove(0, pl_spd)
- if(btn(5) or (pl_last.x==0 and pl_last.y==0)) then
+ if(btn(4) or (pl_last.x==0 and pl_last.y==0)) then
   pl_last=pl_prev
  end
  if (btn(4)) tryshoot()
