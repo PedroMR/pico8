@@ -5,7 +5,7 @@ __lua__
 --by kathrrak
 
 room=0 -- 16x16
-local pl={x=64,y=64,spr=1,shot=10,w=8,h=8}
+local pl={x=64,y=64,spr=1,shot=10,w=4,h=6}
 local pl_last={x=1,y=0}
 scr={x0=0,x1=128,y0=0,y1=128}
 pl_bul={}
@@ -23,7 +23,7 @@ function room_coord(rm,tx,ty)
 end
 
 
-local e1={spr=16,w=7,h=7}
+local e1={spr=16,w=12,h=14}
 
 function v2_dist(o1,o2)
  local dx=o1.x-o2.x
@@ -36,6 +36,7 @@ function rndi(a,b)
 end
 
 -->8
+--tools
 
 tools = {}
 function tools.assign(t, initial)
@@ -90,7 +91,8 @@ end
 
 
 
-
+-->8
+--updates
 
 function _update()
  upd_player()
@@ -118,19 +120,46 @@ function trymove(dx,dy)
  local coll=false
  pl.x += dx pl.y += dy
  
- local x0,x1=pl.x-pl.w/2,pl.x+pl.w/2
- local y0,y1=pl.y-pl.h/2,pl.y+pl.h/2
- -- world bounds
-  if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
-   coll=true
-  end
- if coll then
+ if coll_world(pl) then
   pl.x-=dx pl.y-=dy
  else 
   pl_last.x += dx
   pl_last.y += dy   
- end
+ end 
 end
+
+function coll_world(o)
+ local x0,x1=pl.x-pl.w/2,pl.x+pl.w/2
+ local y0,y1=pl.y-pl.h/2,pl.y+pl.h/2
+ -- world bounds
+ if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
+  return true
+ end
+ -- tilemap
+	if coll_m(x0,y0) or coll_m(x1,y0) 
+    or coll_m(x0,y1) or coll_m(x1,y1) then
+    return true
+ end 
+ 
+ return false
+end
+
+function mgetoff(tx,ty)
+ return mget(tx,ty)
+end
+
+--collision check with tilemap
+function coll_m(x,y)
+ local tx,ty=flr(x/8),flr(y/8)
+ local t=mgetoff(tx,ty)
+ local f=fget(t)
+ if band(f,1)>0 then
+  return true
+ end
+ 
+ return false
+end
+
 
 function tryshoot()
  if (pl.shot>0 or pl.dead) return
@@ -203,6 +232,10 @@ function kill_obj(o)
  del(ene_obj, o)
 end
 
+
+-->8
+-- draw
+
 function _draw()
  cls()
  draw_room(room)
@@ -235,7 +268,6 @@ function draw_room(rm)
  local rx,ry=room_coord(rm,0,0)
  map(rx,ry,0,0,16,16)
 end
-
 
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
