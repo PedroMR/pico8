@@ -11,6 +11,7 @@ scr={x0=0,x1=128,y0=0,y1=128}
 pl_bul={}
 ene_obj={}
 local on_door=false
+local particles={}
 
 menuitem(1,"map")
 menuitem(2,"reconfig")
@@ -110,6 +111,7 @@ function _update()
  upd_player()
  upd_enemy()
  upd_spawn()
+ upd_particles()
 end
 
 function upd_ctrl()
@@ -232,6 +234,9 @@ function move_room(nroom)
  elseif pl.x <= 8 then 
   pl.x = 124
  end
+ 
+ ene_obj={}
+ pl_bul={}
 end
 
 --local spawn_q={e1,e1,e2}
@@ -276,8 +281,32 @@ end
 
 function kill_obj(o)
  del(ene_obj, o)
+ add_explosion(o)
 end
 
+function add_explosion(o)
+ for i=1,10 do
+  local p={x=o.x,y=o.y,spr='.',c=7}
+  p.vx=rnd()*3-1  p.vy=rnd()*3-1
+  p.x+=rnd()/2    p.y+=rnd()/2
+  p.ttl=8+rnd()*4
+  add(particles,p)
+ end
+end
+
+function upd_particles()
+ for p in all(particles) do
+  p.ttl-=1
+  if p.ttl<=0 then
+   del(particles,p)
+  else
+   if (p.ttl<=4) p.c=6
+   p.vx-=p.vx*0.1
+   p.vy-=p.vy*0.1
+   p.x+=p.vx p.y+=p.vy   
+  end
+ end
+end
 
 -->8
 -- draw
@@ -292,6 +321,9 @@ function _draw()
  for o in all(ene_obj) do
   dspr(o)
  end
+ for o in all(particles) do
+  dspr(o)
+ end
  color(3)
  local rx,ry=room_tile(room,pl.x,pl.y)
  local rxc,ryc=tile_from_coord(room,pl.x,pl.y)
@@ -301,11 +333,11 @@ end
 function dspr(o)
  if(o.tw==nil) o.tw,o.th=1,1
  local fx,fy=o.x-o.tw*4,o.y-o.th*4
--- if type(o.spr)=='string' then
---   print(o.spr,fx,fy,o.c)
- --else
+ if type(o.spr)=='string' then
+   print(o.spr,fx,fy,o.c)
+ else
    spr(o.spr,fx,fy,o.tw,o.th)
- --end
+ end
  if draw_bb then
   color(11)
   rect(o.x-o.w/2,o.y-o.h/2,o.x+o.w/2,o.y+o.h/2)
