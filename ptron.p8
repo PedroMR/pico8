@@ -4,7 +4,7 @@ __lua__
 --p-tron
 --by kathrrak
 
-room=0 -- 16x16
+room=16 -- 16x16
 local pl={x=64,y=64,spr=1,shot=10,w=4,h=6}
 local pl_last={x=1,y=0}
 scr={x0=0,x1=128,y0=0,y1=128}
@@ -14,14 +14,25 @@ ene_obj={}
 menuitem(1,"map")
 menuitem(2,"reconfig")
 
+function room_tile(rm)
+ local rm_x = (rm%16)
+ local rm_y = flr(rm/16)
+ return rm_x,rm_y
+end
+
 -- returns coord in tilemap pixels for the tile coords in the room
 function room_coord(rm,tx,ty)
- local rm_x = rm%16
- local rm_y = flr(rm/16)
+ local rm_x,rm_y=room_tile(rm)
  local rx,ry=rm_x*16+tx*8, rm_y*16+ty*8
  return rx,ry
 end
 
+function tile_from_coord(rm,x,y)
+ local rm_x,rm_y=room_tile(rm)
+ local tx,ty = flr(x/8),flr(y/8)
+ local rx,ry=rm_x*16+tx, rm_y*16+ty
+ return rx,ry
+end
 
 local e1={spr=16,w=12,h=14}
 
@@ -129,8 +140,8 @@ function trymove(dx,dy)
 end
 
 function coll_world(o)
- local x0,x1=pl.x-pl.w/2,pl.x+pl.w/2
- local y0,y1=pl.y-pl.h/2,pl.y+pl.h/2
+ local x0,x1=o.x-o.w/2,o.x+o.w/2
+ local y0,y1=o.y-o.h/2,o.y+o.h/2
  -- world bounds
  if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
   return true
@@ -144,14 +155,16 @@ function coll_world(o)
  return false
 end
 
-function mgetoff(tx,ty)
- return mget(tx,ty)
+function mgetoff()
+ local rx,ry=room_tile(room)
+ return mget(rx,ry)
 end
 
 --collision check with tilemap
 function coll_m(x,y)
- local tx,ty=flr(x/8),flr(y/8)
- local t=mgetoff(tx,ty)
+ local rx,ry=tile_from_coord(room,x,y)
+ local tx,ty=flr(rx/8),flr(ry/8)
+ local t=mget(rx,ry)
  local f=fget(t)
  if band(f,1)>0 then
   return true
@@ -247,7 +260,9 @@ function _draw()
   dspr(o)
  end
  color(3)
- print("pl "..pl.x..","..pl.y.." last "..pl_last.x..","..pl_last.y.." shot "..pl.shot,0,120)
+ local rx,ry=room_tile(room,pl.x,pl.y)
+ local rxc,ryc=tile_from_coord(room,pl.x,pl.y)
+ print("pl "..pl.x..","..pl.y.." r "..rx..","..ry.. " rmc "..rxc..","..ryc,0,120)
 end
 
 function dspr(o)
