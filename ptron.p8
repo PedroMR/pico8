@@ -24,6 +24,7 @@ local ene_q={}
 local spawn_between=30
 local spawn_time=10
 local spawn_max=8
+local ene_def_incoming=50
 
 function room_tile(rm)
  local rm_x = (rm%16)
@@ -288,7 +289,7 @@ end
 
 function spawn(tpl_e)
  if(#ene_obj >= spawn_max) return
- local ne=tools.deepassign(tpl_e)
+ local ne=tools.deepassign(tpl_e,{incoming=ene_def_incoming})
  repeat
    ne.x = rndi(10,118)
    ne.y = rndi(10,118)
@@ -301,17 +302,21 @@ end
 
 function upd_enemy() 
  for o in all(ene_obj) do
-  for b in all(pl_bul) do
-	  if coll_pt_obj(b,o) then
-	   kill_obj(o)
-	   del(pl_bul,b)
+  if o.incoming>0 then
+   o.incoming-=1   
+  else -- not incoming, it's here!
+	  for b in all(pl_bul) do
+		  if coll_pt_obj(b,o) then
+		   kill_obj(o)
+		   del(pl_bul,b)
+		  end
 	  end
-  end
-  if o.m == 'drift' then
-   local dif=v2_sub(pl,o)
-   local v=v2_norm(dif,0.4)
-   o.x+=v.x o.y+=v.y
-  end  
+	  if o.m == 'drift' then
+	   local dif=v2_sub(pl,o)
+	   local v=v2_norm(dif,0.4)
+	   o.x+=v.x o.y+=v.y
+	  end  
+	 end
  end
 end
 
@@ -365,7 +370,7 @@ function _draw()
   dspr(b)
  end
  for o in all(ene_obj) do
-  dspr(o)
+  if(o.incoming%4 == 0) dspr(o)
  end
  for o in all(particles) do
   dspr(o)
