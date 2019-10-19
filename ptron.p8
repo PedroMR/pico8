@@ -19,7 +19,7 @@ local on_door=false
 
 -- enemies 😐
 local ene_obj={}
-local e1={spr=16,w=12,h=14}
+local e1={spr=16,w=12,h=14,m='drift'}
 local ene_q={}
 local spawn_between=30
 local spawn_time=10
@@ -46,9 +46,25 @@ function tile_from_coord(rm,x,y)
 end
 
 function v2_dist(o1,o2)
- local dx=o1.x-o2.x
- local dy=o1.y-o2.y
- return sqrt(dx*dx+dy*dy)
+ local d=v2_sub(o1,o2)
+ return v2_mag(d)
+end
+
+function v2_mag(d)
+ return sqrt(d.x*d.x+d.y*d.y)
+end
+
+function v2_sub(o1,o2)
+ return {x=o1.x-o2.x,y=o1.y-o2.y}
+end
+
+-- normalize to k length or 1 if no k
+function v2_norm(v,k)
+ if(k==nil) k=1
+ local mag=v2_mag(v)
+ local nmag=k
+ local r=nmag/mag
+ return {x=v.x*r,y=v.y*r}
 end
 
 function rndi(a,b)
@@ -260,8 +276,14 @@ function move_room(nroom)
 end
 
 function upd_spawn()
- spawn_time-=1
- if(spawn_time <= 0) spawn(e1)
+ if #ene_q > 0 then
+	 spawn_time-=1
+	 if(spawn_time<=0) then
+	  tpl_e=ene_q[1]
+	  del(ene_q,tpl_e)
+	  spawn(tpl_e)
+	 end
+	end
 end
 
 function spawn(tpl_e)
@@ -277,7 +299,7 @@ function spawn(tpl_e)
 end
 
 
-function upd_enemy()
+function upd_enemy() 
  for o in all(ene_obj) do
   for b in all(pl_bul) do
 	  if coll_pt_obj(b,o) then
@@ -285,6 +307,11 @@ function upd_enemy()
 	   del(pl_bul,b)
 	  end
   end
+  if o.m == 'drift' then
+   local dif=v2_sub(pl,o)
+   local v=v2_norm(dif,0.4)
+   o.x+=v.x o.y+=v.y
+  end  
  end
 end
 
