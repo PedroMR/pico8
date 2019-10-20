@@ -9,6 +9,10 @@ local paused=false
 local scr={x0=0,x1=128,y0=0,y1=128}
 local particles={}
 local frame=0
+local room_trans=-1
+local room_trans_t=0
+local room_trans_d={0,0}
+local room_trans_time=40
 
 -- player 🐱
 local pl={x=64,y=64,spr=1,shot=10,w=4,h=6}
@@ -70,6 +74,15 @@ end
 
 function rndi(a,b)
  return flr(rnd()*(b-a+1)+a)
+end
+
+function lerp(t,a,b)
+ t=clamp(t,0,1)
+ return (1-t)*a+t*b
+end
+
+function clamp(v,a,b)
+ return min(max(v,a),b)
 end
 
 function _init()
@@ -137,7 +150,9 @@ end
 function _update()
  frame+=1
  upd_map()
- if not paused then
+ if room_trans_t > 0 then
+  room_trans_t-=1
+ elseif not paused then
 	 upd_player()
 	 upd_enemy()
 	 upd_spawn()
@@ -224,7 +239,7 @@ end
 function upd_player()
  upd_ctrl() 
  upd_bul()
- upd_door()
+ upd_door() 
 end
 
 function upd_bul()
@@ -252,23 +267,33 @@ function upd_door()
 end
 
 function start_room(nroom)
- move_room(nroom)
+ set_room(nroom)
  pl.x,pl.y=64,64
 end
 
 function move_room(nroom)
- room = nroom
+ room_trans=room
+ room_trans_t=room_trans_time
+ set_room(nroom)
  on_door = true
  if pl.y>=120 then
  	pl.y = 4
+ 	room_trans_d={x=0,y=1}
  elseif pl.y <= 8 then
   pl.y = 124
+ 	room_trans_d={x=0,y=-1}
  end
  if pl.x>=120 then
  	pl.x = 4
+ 	room_trans_d={x=1,y=0}
  elseif pl.x <= 8 then 
   pl.x = 124
+ 	room_trans_d={x=-1,y=0}
  end
+end
+
+function set_room(nroom)
+ room = nroom
  
  ene_obj={}
  pl_bul={}
@@ -362,24 +387,41 @@ end
 
 function _draw()
  cls()
- draw_room(room)
- dspr(pl)
- -- animate visor
- pset(pl.x-1+(3*t()%2),pl.y-2,2)
- for b in all(pl_bul) do
-  dspr(b)
- end
- for o in all(ene_obj) do
-  if(o.incoming%4 == 0) dspr(o)
- end
- for o in all(particles) do
-  dspr(o)
- end
- draw_map()
+ if room_trans_t>0 then
+  draw_trans()
+ else
+	 draw_room(room)
+	 dspr(pl)
+	 -- animate visor
+	 pset(pl.x-1+(3*t()%2),pl.y-2,2)
+	 for b in all(pl_bul) do
+	  dspr(b)
+	 end
+	 for o in all(ene_obj) do
+	  if(o.incoming%4 == 0) dspr(o)
+	 end
+	 for o in all(particles) do
+	  dspr(o)
+	 end
+	 draw_map()
+	end
  color(3)
  local rx,ry=room_tile(room,pl.x,pl.y)
  local rxc,ryc=tile_from_coord(room,pl.x,pl.y)
  print("pl "..pl.x..","..pl.y.." r "..rx..","..ry.. " rmc "..rxc..","..ryc,0,120)
+end
+
+function draw_trans()
+ local x0,y0,x1,y1
+ local t=room_trans_t/room_trans_time
+ local k0=lerp(1-t,0,128)
+ local k1=lerp(t,0,128)
+ x0=room_trans_d.x*-k0
+ y0=room_trans_d.y*-k0
+ x1=room_trans_d.x*k1
+ y1=room_trans_d.y*k1
+ draw_room(room,x1,y1)
+ draw_room(room_trans,x0,y0)
 end
 
 function dspr(o)
@@ -396,9 +438,10 @@ function dspr(o)
  end
 end
 
-function draw_room(rm)
+function draw_room(rm,sx,sy)
+ sx=sx or 0 sy=sy or 0
  local rx,ry=room_coord(rm,0,0)
- map(rx,ry,0,0,16,16)
+ map(rx,ry,sx,sy,16,16)
 end
 
 -->8
