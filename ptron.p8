@@ -6,7 +6,8 @@ __lua__
 
 local room=1 -- 16x16
 local paused=false
-local scr={x0=0,x1=128,y0=0,y1=128}
+local scr={x0=0,x1=16*8,y0=0,y1=16*8}
+--local scr={x0=0,x1=16*8,y0=8,y1=15*8}
 local particles={}
 local frame=0
 local room_trans=-1
@@ -192,12 +193,12 @@ function coll_world(o)
  local y0,y1=o.y-o.h/2,o.y+o.h/2
  -- world bounds
  if x0<scr.x0 or x1>scr.x1 or y0<scr.y0 or y1>scr.y1 then
-  return true
+  return true,1
  end
  -- tilemap
 	if coll_m(x0,y0) or coll_m(x1,y0) 
     or coll_m(x0,y1) or coll_m(x1,y1) then
-    return true
+    return true,2
  end 
  
  return false
@@ -226,7 +227,7 @@ function tryshoot()
  if (pl.shot>0 or pl.dead) return
  pl.shot=10
  local nb={x=pl.x,y=pl.y,spd=pl_last,
-  spr=2,tw=1,th=1,w=8,h=3
+  spr=2,tw=1,th=1,w=2,h=2
  } 
  nb.w2=nb.w/2 nb.h2=nb.h/2 
  local pl_bul_spd=3
@@ -246,7 +247,9 @@ function upd_bul()
  for b in all(pl_bul) do
     b.x += b.spd.x
     b.y += b.spd.y
+    local coll, ct=coll_world(b)
     if coll_world(b) then
+     if(ct==2) add_explosion(b,{c=10,ttl=2,n=5})
      del(pl_bul,b)
     end
   end
@@ -358,12 +361,16 @@ function kill_obj(o)
  add_explosion(o)
 end
 
-function add_explosion(o)
- for i=1,10 do
-  local p={x=o.x,y=o.y,spr='.',c=7}
+local def_par={c=7,ttl=8,n=10}
+function add_explosion(o,inpar)
+ local par={}
+ tools.assign(def_par,par)
+ if (inpar~=nil)tools.assign(inpar,par)
+ for i=1,par.n do
+  local p={x=o.x,y=o.y,spr='.',c=par.c}
   p.vx=rnd()*3-1  p.vy=rnd()*3-1
   p.x+=rnd()/2    p.y+=rnd()/2
-  p.ttl=8+rnd()*4
+  p.ttl=par.ttl+rnd()*4
   add(particles,p)
  end
 end
