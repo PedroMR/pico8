@@ -46,7 +46,7 @@ end
 
 function tile_from_coord(rm,x,y)
  local rm_x,rm_y=room_tile(rm)
- local tx,ty = flr(x/8),flr(y/8)
+ local tx,ty = flr((x-scr.x0)/8),flr((y-scr.y0)/8)
  local rx,ry=rm_x*room_w+tx, rm_y*room_h+ty
  return rx,ry
 end
