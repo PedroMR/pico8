@@ -21,6 +21,9 @@ local pl_last={x=1,y=0}
 local pl_spd=2
 local pl_bul={}
 local on_door=false
+pl.hp_max=10
+pl.hp=pl.hp_max
+pl_damaged=0
 
 -- enemies 😐
 local ene_obj={}
@@ -245,6 +248,7 @@ function upd_player()
  upd_ctrl() 
  upd_bul()
  upd_door() 
+ if(pl_damaged>0) pl_damaged-=1
 end
 
 function upd_bul()
@@ -349,6 +353,10 @@ function upd_enemy()
 		   del(pl_bul,b)
 		  end
 	  end
+	  if coll_pt_obj(pl,o) then
+	   kill_obj(o)
+	   damage_pl(1)
+	  end
 	  if o.m == 'drift' then
 	   local dif=v2_sub(pl,o)
 	   local v=v2_norm(dif,0.4)
@@ -399,6 +407,10 @@ function upd_particles()
  end
 end
 
+function damage_pl(amt)
+ pl.hp-=amt 
+ pl_damaged=5
+end
 -->8
 -- draw
 
@@ -408,7 +420,9 @@ function _draw()
   draw_trans()
  else
 	 draw_room(room)
+	 if(pl_damaged>0) pal(7,8)
 	 dspr(pl)
+	 pal()
 	 -- animate visor
 	 pset(pl.x-1+(3*t()%2),pl.y-2,2)
 	 for b in all(pl_bul) do
@@ -511,17 +525,17 @@ function draw_hud()
  rectfill(0,0,127,scr.y0-1,1)
  rect(0,0,127,scr.y0-1,11) 
  print("♥",3,3)
- hp_max=10
- hp=5
  local hpx0,hpy0=9,3
- local hpw=2*hp
- local hpmw=2*hp_max
+ local hpw=2*pl.hp
+ local hpmw=2*pl.hp_max
  local hph=3
  
 -- rect(hpx0,hpy0,hpmw+hpx0,hph+hpy0) 
 -- rectfill(hpx0,hpy0,hpw+hpx0,hph+hpy0)
- for i=1,hp_max do
-  c=3 if(i<=hp) c=11
+ for i=1,pl.hp_max do
+  c=3 
+  if(i<=pl.hp) c=11
+  if(i == pl.hp+1 and pl_damaged>0) c=8
   line(hpx0+i*2,hpy0,hpx0+i*2,hpy0+hph,c)
  end
 end
