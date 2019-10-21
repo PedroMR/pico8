@@ -22,8 +22,9 @@ local pl_spd=2
 local pl_bul={}
 local on_door=false
 pl.hp_max=10
-pl.hp=pl.hp_max
-pl_damaged=0
+pl.hp=2 --pl.hp_max
+pl_damaged=0 -- damage blink
+pl_blow=0 --blowing up
 
 -- enemies 😐
 local ene_obj={}
@@ -249,6 +250,10 @@ function upd_player()
  upd_bul()
  upd_door() 
  if(pl_damaged>0) pl_damaged-=1
+ if(pl_blow>0) then
+  pl_blow-=1
+  if(pl_blow<=0) start_room(0)
+ end
 end
 
 function upd_bul()
@@ -286,6 +291,10 @@ end
 function start_room(nroom)
  set_room(nroom)
  pl.x,pl.y=64,64
+ pl_blow,pl_damaged=0,0
+ pl.dead=false
+ pl.hp=pl.hp_max
+ on_door=false
 end
 
 function move_room(nroom)
@@ -409,7 +418,13 @@ end
 
 function damage_pl(amt)
  pl.hp-=amt 
- pl_damaged=5
+ if pl.hp <= 0 then
+ 	pl_blow=60
+ 	add_explosion(pl)
+ 	pl.dead=true
+ else
+	 pl_damaged=5 
+	end
 end
 -->8
 -- draw
@@ -420,11 +435,13 @@ function _draw()
   draw_trans()
  else
 	 draw_room(room)
-	 if(pl_damaged>0) pal(7,8)
-	 dspr(pl)
-	 pal()
-	 -- animate visor
-	 pset(pl.x-1+(3*t()%2),pl.y-2,2)
+	 if not pl.dead then
+		 if(pl_damaged>0) pal(7,8)
+		 dspr(pl)
+		 pal()
+		 -- animate visor
+		 pset(pl.x-1+(3*t()%2),pl.y-2,2)
+	 end
 	 for b in all(pl_bul) do
 	  dspr(b)
 	 end
