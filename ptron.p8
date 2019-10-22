@@ -31,9 +31,9 @@ pl_blow=0 --blowing up
 
 -- enemies 😐
 local ene_obj={}
-local b1={spr=18,w=4,h=4,m='fixed',incoming=0,bullet=true}
+local b1={spr=18,w=4,h=4,spd=1,m='fixed',incoming=0,bullet=true}
 local e1={spr=16,w=12,h=14,m='drift'}
-local e_gun={spr=17,w=12,h=14,shot=b1,rate=10}
+local e_gun={spr=17,w=12,h=14,shot=b1,rate=30}
 local ene_q={}
 local spawn_between=30
 local spawn_time=10
@@ -421,7 +421,9 @@ function add_shot(o)
  local tpl_b = o.shot or b1
  local b=tools.deepassign(tpl_b)
  b.x,b.y = o.x,o.y
- b.vx,b.vy=1,-0.5
+ local d=v2_sub(pl,b)
+ local v=v2_norm(d,b.spd or 1)
+ b.vx,b.vy=v.x,v.y
  
  add(ene_obj,b) 
 end
