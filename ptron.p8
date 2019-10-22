@@ -9,6 +9,8 @@ local room_w,room_h=16,14
 local paused=false
 local scr={x0=0,x1=16*8,y0=2*8,y1=16*8}
 --local scr={x0=0,x1=16*8,y0=2*8,y1=16*8}
+scr.h=scr.y1-scr.y0
+scr.w=scr.x1-scr.x0
 local particles={}
 local frame=0
 local room_trans=-1
@@ -482,16 +484,14 @@ function _draw()
 end
 
 function draw_trans()
- local x0,y0,x1,y1
  local t=room_trans_t/room_trans_time
- local kx=lerp(1-t,scr.x0,scr.x1)
- local kxi=lerp(t,scr.x0,scr.x1)
- local ky=lerp(1-t,scr.y0,scr.y1)
- local kyi=lerp(t,scr.y0,scr.y1)
- x0=room_trans_d.x*-kx
- y0=room_trans_d.y*-ky
- x1=room_trans_d.x*kxi
- y1=room_trans_d.y*kyi
+
+ local x1=lerp(1-t,0+room_trans_d.x*scr.w,0)
+ local x0=lerp(1-t,0,0-room_trans_d.x*scr.w) 
+ 
+ local y1=lerp(1-t,0+room_trans_d.y*scr.h,0)
+ local y0=lerp(1-t,0,0-room_trans_d.y*scr.h) 
+
  draw_room(room,x1,y1)
  draw_room(room_trans,x0,y0)
 end
