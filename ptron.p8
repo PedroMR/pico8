@@ -7,7 +7,7 @@ __lua__
 local room=1 -- 16x14
 local room_w,room_h=16,14
 local paused=false
-local scr={x0=0,x1=16*8,y0=0*8,y1=16*8}
+local scr={x0=0,x1=16*8,y0=2*8,y1=16*8}
 --local scr={x0=0,x1=16*8,y0=2*8,y1=16*8}
 local particles={}
 local frame=0
@@ -292,10 +292,10 @@ function upd_door()
  local f=fget(t)
 	if band(f,2)>0 then
 	 local nroom=room 
-	 if (pl.y>=120) nroom+=16
-	 if (pl.x>=120) nroom+=1
-	 if (pl.y<=8) nroom-=16
-	 if (pl.x<=8) nroom-=1
+	 if (pl.y>=scr.y1-8) nroom+=16
+	 if (pl.x>=scr.x1-8) nroom+=1
+	 if (pl.y<=scr.y0+8) nroom-=16
+	 if (pl.x<=scr.x0+8) nroom-=1
 	 if nroom==room then
    on_door=false
 	 else
@@ -473,24 +473,25 @@ function _draw()
 	 end	 
 	 draw_map()
 	end
-	if map_vis then	
-		draw_hud()	
-	end
+	draw_hud()	
  color(3)
  local rx,ry=room_tile(room,pl.x,pl.y)
  local rxc,ryc=tile_from_coord(room,pl.x,pl.y) 
+ print("pl "..pl.x..","..pl.y.."scr.y "..scr.y0.."-"..scr.y1.." ond "..tostr(on_door),0,120)
 -- print("pl "..pl.x..","..pl.y.." r "..rx..","..ry.. " rmc "..rxc..","..ryc.." deu "..tostr(dr_ene_unlocked),0,120)
 end
 
 function draw_trans()
  local x0,y0,x1,y1
  local t=room_trans_t/room_trans_time
- local k0=lerp(1-t,0,128)
- local k1=lerp(t,0,128)
- x0=room_trans_d.x*-k0
- y0=room_trans_d.y*-k0
- x1=room_trans_d.x*k1
- y1=room_trans_d.y*k1
+ local kx=lerp(1-t,scr.x0,scr.x1)
+ local kxi=lerp(t,scr.x0,scr.x1)
+ local ky=lerp(1-t,scr.y0,scr.y1)
+ local kyi=lerp(t,scr.y0,scr.y1)
+ x0=room_trans_d.x*-kx
+ y0=room_trans_d.y*-ky
+ x1=room_trans_d.x*kxi
+ y1=room_trans_d.y*kyi
  draw_room(room,x1,y1)
  draw_room(room_trans,x0,y0)
 end
