@@ -618,8 +618,11 @@ function draw_map()
   for y=y0,y1 do
    local t=mget(x,y)
    local c=0
-   if(band(fget(t),5)>=5) c=7
-   if(band(fget(t),6)>=6) c=5
+   local f=fget(t)
+   if(band(f,5)>=5) c=7
+   if(band(f,6)>=6) c=5
+   if(t==67) c=8
+   if(t==68) c=12
    if c>0 then
     pset(sdx+x,sdy+y,c)
    end
