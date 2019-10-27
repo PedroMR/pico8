@@ -596,8 +596,11 @@ function draw_intro()
  for i=1,#intro_text do
   if(i>intro_line) break  
   local txt=intro_text[i]  
-  
-  if(intro_line==i) txt=sub(intro_text[i],1,intro_char)
+  if(i==intro_line) then
+	  if(intro_line==i) txt=sub(intro_text[i],1,intro_char)
+		 --print(sub(intro_text[i],1,intro_char+1),20,y-1,5)
+		 print(sub(intro_text[i],intro_char+1,intro_char+1),20+#txt*4,y-1,5)
+	 end
 	 print(txt,20,y,7)
 	 y+=10
 	end
