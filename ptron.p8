@@ -23,13 +23,14 @@ local dr_ene_unlocked=false
 -- player 🐱
 local pl={x=64,y=64,spr=1,shot=10,w=4,h=6}
 local pl_last={x=1,y=0}
-local pl_spd=2
+local pl_spd=1
 local pl_bul={}
 local on_door=false
 local pl_items={}
 local it_key_red="kr"
 local pl_wpns={}
-pl_wpns[1]={dmg=1,spr=4,sel=true,get=4}
+local wpn_basic={dmg=1,spr=4,sel=true,get=4,open=70}
+pl_wpns[1]=wpn_basic
 pl_wpns[2]={dmg=2,spr=5}
 pl_wpns[3]={dmg=3,spr=6}
 pl_wpns.sel=1
@@ -85,6 +86,10 @@ function tile_at_tcoord(rm,tx,ty)
  local rx,ry=tile_from_coord(rm,0,0) 
  local t=mget(rx+tx,ry+ty)
  return t
+end
+
+function curr_wpn()
+ return pl_wpns[pl_wpns.sel]
 end
 
 function v2_dist(o1,o2)
@@ -259,9 +264,10 @@ end
 
 function tryshoot()
  if (pl.shot>0 or pl.dead) return
+ if (not curr_wpn().got) return
  pl.shot=10
  local nb={x=pl.x,y=pl.y,spd=pl_last,
-  spr=2,tw=1,th=1,w=2,h=2,wpn=pl_wpns[pl_wpns.sel]
+  spr=2,tw=1,th=1,w=2,h=2,wpn=curr_wpn()
  } 
  nb.w2=nb.w/2 nb.h2=nb.h/2 
  local pl_bul_spd=3
@@ -284,7 +290,7 @@ function upd_player()
  local rx,ry=tile_from_coord(room,pl.x,pl.y)
  local t=mget(rx,ry)
  if band(fget(t),8) >=8 then
---  printh("got item "..t,logfile)
+  printh("got item "..t,logfile)
   for wpn in all(pl_wpns) do
 	  if t==wpn.get then
 	   wpn.got=true
@@ -317,7 +323,7 @@ function chk_open_door(b)
  local f=fget(t)
  printh("b "..b.x..","..b.y.." r "..rx..","..ry..' t '..t..' f '..f,logfile)
  local d=0
- if (t==70) d=1
+ if (t==curr_wpn().open) d=1
  -- on weapon
   --todo neighbors too  
 	if (d>0) open_neigh(rx,ry,t)
@@ -487,6 +493,7 @@ function upd_enemy(o)
 	 end
   if not pl.dead and coll_pt_obj(pl,o) then
    kill_obj(o)
+   del(ene_bul,o)
    damage_pl(1)
   end
   if o.m == 'fixed' then
@@ -574,6 +581,41 @@ end
 
 function _draw()
  cls()
+ if intro then
+  draw_intro()
+  if (btnp(4) or btnp(5)) intro=false
+ else
+	 draw_game()
+ end
+end
+
+local intro_tta=10
+function draw_intro()
+-- print('intro', 50,20,7)
+ y=20
+ for i=1,#intro_text do
+  if(i>intro_line) break  
+  local txt=intro_text[i]  
+  
+  if(intro_line==i) txt=sub(intro_text[i],1,intro_char)
+	 print(txt,20,y,7)
+	 y+=10
+	end
+ intro_tta-=4
+	if intro_tta<=0 then
+	 intro_tta=intro_tpc
+	 intro_char+=1	 
+	 if intro_char > #(intro_text[intro_line]) then
+	  intro_line+=1
+	  intro_char=0
+	 end
+	 if intro_line > #intro_text then
+	  intro_tta=9999
+	 end
+	end
+end
+
+function draw_game()
  if room_trans_t>0 then
   draw_trans()
  else  
@@ -644,6 +686,21 @@ end
 -->8
 -- menus
 
+intro=true
+intro_line=1
+intro_char=1
+intro_tpc=10
+intro_text={
+ "robot 7402",
+ "sent to explore gala maze",
+ "now stranded in gala maze",
+ "gala maze may have darkness",
+ "gala maze residents unknown",
+ "robot 7402",
+ "we all pray for you . . .",
+ "",
+ "        press ❎ to start"
+}
 
 map_vis=false
 function map_tgl()
