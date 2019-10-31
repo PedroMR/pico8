@@ -44,7 +44,7 @@ local ene_obj={}
 local ene_bul={}
 local b1={spr=18,w=4,h=4,spd=1,m='fixed',incoming=0,bullet=true}
 local e1={spr=16,w=12,h=14,m='drift'}
-local e_gun={spr=17,w=12,h=14,shot=b1,rate=30}
+local e_gun={spr=17,w=12,h=14,shot=b1,rate=5,burst=3,burst_delay=30}
 local ene_q={}
 local spawn_between=30
 local spawn_time=10
@@ -513,11 +513,19 @@ function upd_enemy(o)
    o.x+=v.x o.y+=v.y
   end  
   if o.rate~=nil then
-   if (o.tts==nil) o.tts=o.rate
+   if (o.tts==nil) o.tts=o.rate o.burst_left=o.burst
    o.tts-=1
    if o.tts <= 0 then
     add_shot(o)
-    o.tts=o.rate
+    if o.burst then
+     o.burst_left -= 1
+     if o.burst_left <= 0 then
+      o.burst_left=o.burst
+      o.tts=o.burst_delay
+     else
+ 	    o.tts=o.rate
+ 	   end
+	   end
    end
   end
  end
