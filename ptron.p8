@@ -30,6 +30,7 @@ local pl_items={}
 local it_key_red="kr"
 local pl_wpns={}
 local wpn_basic={dmg=1,spr=4,sel=true,get=4,open=70}
+local door_basic=70
 pl_wpns[1]=wpn_basic
 pl_wpns[2]={dmg=2,spr=5,open=68,get=5,col=12}
 pl_wpns[3]={dmg=3,spr=6,open=67,get=6,col=8}
@@ -329,10 +330,10 @@ function chk_open_door(b)
  b.y += b.spd.y
  local rx,ry=tile_from_coord(room,b.x,b.y)
  local t=mget(rx,ry)
- local f=fget(t)
- printh("b "..b.x..","..b.y.." r "..rx..","..ry..' t '..t..' f '..f,logfile)
+-- local f=fget(t)
+-- printh("b "..b.x..","..b.y.." r "..rx..","..ry..' t '..t..' f '..f,logfile)
  local d=0
- if (t==curr_wpn().open) d=1
+ if (t==70 or t==curr_wpn().open) d=1
  -- on weapon
   --todo neighbors too  
 	if (d>0) open_neigh(rx,ry,t)
