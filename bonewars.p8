@@ -3,6 +3,8 @@ version 18
 __lua__
 -- bone wars
 
+local turbo_mult=4
+
 local tw=16
 local th=16
 local spawn_y=80
@@ -17,16 +19,19 @@ local classes={
  },
  {
   name="melee",
-  spr=16,
+  spr=18,
+  attspr=19,
   dmg=5,
   hp=50,
-  tpa=5,
-  tpm=0,
-  range=8
+  tpa=8,
+  tpm=4,
+  range=16
  }
 }
 
-function _init()
+function init_game()
+ army1={sign=1}
+ army2={sign=-1}
 	local tower1={x=8,y=spawn_y,c=1}
 	local tower2={x=120,spr=34,y=spawn_y,c=1}
  for ty=0,th do
@@ -41,12 +46,20 @@ function _init()
 	 end
 	end
 	
-	local sw={x=tower1.x,y=spawn_y,c=2,ttm=0}
-	local sw2={x=tower2.x,y=spawn_y,c=2,ttm=0}
 	army_add(army1,tower1)
 	army_add(army2,tower2)
+	local sw={x=tower1.x,y=spawn_y,c=2,ttm=0}
 	army_add(army1,sw)
+	local sw2={x=tower2.x,y=spawn_y,c=2,ttm=0}
 	army_add(army2,sw2)
+	for i=1,1 do
+		sw2={x=tower2.x+4*i,y=spawn_y,c=2,ttm=0}
+		army_add(army2,sw2)
+	end
+	for i=1,1 do
+		sw={x=tower1.x-4*i,y=spawn_y,c=2,ttm=0}
+		army_add(army1,sw)
+	end
 end
 
 function army_add(a,s)
@@ -62,9 +75,21 @@ end
 -->8
 --update
 
-function _update()
- upd_army(army1)
- upd_army(army2)
+local spots={} --taken by troops
+local time_until_end
+
+function update_game()
+ for i=1,turbo_mult do
+  if time_until_end ~= nil then
+   time_until_end -= 1
+   if time_until_end <= 0 then
+    game_over()
+   end
+  end
+
+	 upd_army(army1)
+ 	upd_army(army2)
+ end
 end
 
 function upd_army(army)
@@ -77,19 +102,30 @@ function upd_soldier(s)
  local c=classes[s.c]
  if(c.name=="tower") return
  local ce, ced=closest_enemy(s)
- if ced>c.range then
+ if ced>c.range/2 then
 	 s.ttm-=1
 	 if s.ttm<=0 then
 	  s.ttm = c.tpm
-		 s.x += s.sign
+		 local nx = s.x + s.sign
+		 if spots[nx]==nil then
+		  spots[nx]=true
+		  spots[s.x]=nil
+		  s.x=nx
+		 end
 		end
-	else
-	 if (ce!=s.tgt) s.tgt=ce s.tta=s.cls.tpa
+	end	
+	if ced<=c.range then
+	 if (ce!=s.tgt) s.tgt=ce s.tta=s.cls.tpa 
 		s.tta-=1
 		if s.tta<=0 then
+		 if s.spr == s.cls.attspr then
+		  s.spr=nil
+		 else
+			 s.spr=s.cls.attspr
+			end
 		 s.dy=s.dy or 1
 		 s.dy=-s.dy
-		 s.y+=s.dy
+--		 s.y+=s.dy
 		 s.tta = s.cls.tpa
 		 dmg_soldier(s.tgt,s.cls.dmg)
 		end
@@ -100,7 +136,10 @@ function dmg_soldier(s, dmg)
  s.hp -= dmg
  if s.hp <= 0 then
   s.dead=true
+  spots[s.x]=nil
   del(s.army, s)
+  
+  if(s.cls.name=="tower") time_until_end = 10
  end
 end
 
@@ -122,7 +161,7 @@ end
 -->8
 --draw
 
-function _draw()
+function draw_game()
 	cls(12)
 	map()
 	
@@ -149,8 +188,53 @@ function draw_hp(s)
  local gw=w*s.hp/s.cls.hp
  local rw=w-gw
  local bary=s.y-6+s.sign
- line(s.x+w/2,bary,s.x+w/2-rw,bary,8)
- line(s.x-w/2,bary,s.x-w/2+gw,bary,11)
+ local x0=s.x+(s.sw or 1)*8
+ line(x0+w/2,bary,x0+w/2-rw,bary,8)
+ line(x0-w/2,bary,x0-w/2+gw,bary,11)
+end
+-->8
+--menus
+
+local scr_start=1
+local scr_game=2
+local scr_gameover=3
+local screen=scr_start
+
+function _init()
+-- init_game()
+end
+
+function _draw()
+ if screen==scr_start then
+  cls()
+  print("press ❎ to start",30,80)
+ elseif screen==scr_game then 
+  draw_game()
+ elseif screen==scr_gameover then 
+--  draw_game()
+  draw_game()
+  print("◆ game over ◆",24,30)   
+ end
+end
+
+function _update()
+ if screen==scr_start then
+  if btnp(4) then
+   screen=scr_game
+   init_game()
+  end
+ elseif screen==scr_game then
+	 update_game()
+ elseif screen==scr_gameover then
+	 update_game()
+  if btnp(4) then
+   screen=scr_start
+  end
+	end
+end
+
+function game_over()
+ screen=scr_gameover
 end
 __gfx__
 00000000444444443333333300000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbb00000000000000000000000
