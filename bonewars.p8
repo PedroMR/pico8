@@ -21,21 +21,40 @@ local classes={
  {
   name="melee",
   spr=18,
+  cost=10,
   attspr=19,
   dmg=5,
   hp=50,
   tpa=9,
   tpm=3,
   range=16
+ },
+ {
+  name="bow",
+  spr=22,
+  cost=30,
+  attspr=6,
+  hp=35,
+  tpa=19,
+  tpm=3,
+  range=62,
+  proj={
+	  vy=-0.6,
+	  vx=2,
+	  dmg=10
+	 }  
  }
 }
 
 function init_game()
- army1={sign=1}
- army2={sign=-1}
+ army1={sign= 1, gp=0, selected=1}
+ army2={sign=-1, gp=0, selected=1}
  proj={}
+ spots={}
 	local tower1={x=8,y=spawn_y-8,c=1}
 	local tower2={x=120,spr=34,y=spawn_y-8,c=1}
+	army1.tower=tower1
+	army2.tower=tower2
  for ty=0,th do
 	 for tx=0,tw do
 	 	local t=mget(tx,ty)
@@ -55,11 +74,11 @@ function init_game()
 	local sw2={x=tower2.x,y=spawn_y,c=2,ttm=0}
 	army_add(army2,sw2)
 	for i=1,2 do
-		sw2={x=tower2.x+4*i,y=spawn_y,c=2,ttm=0}
+		sw2={x=tower2.x+4*i,y=spawn_y,c=3,ttm=0}
 		army_add(army2,sw2)
 	end
-	for i=1,1 do
-		sw={x=tower1.x-4*i,y=spawn_y,c=2,ttm=0}
+	for i=1,2 do
+		sw={x=tower1.x-4*i,y=spawn_y,c=3,ttm=0}
 		army_add(army1,sw)
 	end
 end
@@ -86,6 +105,7 @@ function update_game()
    time_until_end -= 1
    if time_until_end <= 0 then
     game_over()
+    time_until_end=nil
    end
   end
   
@@ -101,6 +121,7 @@ function upd_army(army)
 	for s in all(army) do
 	 upd_soldier(s)
 	end
+	army.gp+=0.2
 end
 
 function upd_soldier(s)
@@ -113,7 +134,7 @@ function upd_soldier(s)
 	  s.ttm = c.tpm
 		 local nx = s.x + s.sign
 		 if spots[nx]==nil then
-		  spots[nx]=true
+--		  spots[nx]=true
 		  spots[s.x]=nil
 		  s.x=nx
 		 end
@@ -122,19 +143,39 @@ function upd_soldier(s)
 	if ced<=c.range then
 	 if (ce!=s.tgt) s.tgt=ce s.tta=s.cls.tpa 
 		s.tta-=1
+		if s.tta<=4 then
+		 s.spr = s.cls.attspr
+		else
+		 s.spr = nil
+		end
 		if s.tta<=0 then
+--[[
 		 if s.spr == s.cls.attspr then
 		  s.spr=nil
 		 else
 			 s.spr=s.cls.attspr
 			end
+		]]
 		 s.dy=s.dy or 1
 		 s.dy=-s.dy
 --		 s.y+=s.dy
 		 s.tta = s.cls.tpa
-		 dmg_soldier(s.tgt,s.cls.dmg)
+		 if(s.cls.dmg) dmg_soldier(s.tgt,s.cls.dmg)
+		 if(s.cls.proj) soldier_shoot(s)
 		end
 	end
+end
+
+function soldier_shoot(s)
+ local np={}
+ for k,v in pairs(s.cls.proj) do
+  np[k] = v
+ end
+ np.army=s.army
+ np.x = s.x
+ np.y = s.y
+ np.vx = np.vx * s.sign
+ add(proj, np)
 end
 
 function dmg_soldier(s, dmg)
@@ -166,8 +207,28 @@ end
 
 function upd_input()
  if btnp(5) then
-  fire_arrow()
+--  fire_arrow()
  end
+ upd_army_btn(army1,1)
+ upd_army_btn(army2,0)
+end
+
+function upd_army_btn(a,p)
+ if (btnp(2,p)) a.selected-=1
+ if (btnp(3,p)) a.selected+=1 
+ 
+ a.selected=(a.selected+2-1)%2+1
+ 
+ if (btnp(5,p)) buy_soldier(a)
+end
+
+function buy_soldier(a)
+ local cidx=a.selected+1
+ local c=classes[cidx]
+ if (c.cost == nil or c.cost>a.gp) return
+ a.gp -= c.cost
+	local s={x=a.tower.x,y=spawn_y,c=cidx,ttm=0}
+	army_add(a,s)
 end
 
 function fire_arrow()
@@ -189,7 +250,7 @@ function upd_proj()
   local ce, ced=closest_enemy(p)
   local hit=false
   if(ced < 2) then
-   if abs(ce.y-p.y)<2 then
+   if abs(ce.y-p.y)<8 then
 				dmg_soldier(ce,5)
 				hit=true
 			end
@@ -206,15 +267,36 @@ function draw_game()
 	
 	draw_army(army1)
 	draw_army(army2)
-	for p in all(proj) do
-	 draw_proj(p)
-	end
+	foreach(proj, draw_proj)
 end
 
 function draw_army(army)
-	for s in all(army) do
-	 draw_soldier(s)
+ foreach(army, draw_soldier)
+	draw_hud(army)
+end
+
+function draw_hud(a)
+ local gx=a.tower.x-5
+ local gy=spawn_y+10
+ print(flr(a.gp).."◆",gx,gy,10)
+ 
+ for i=1,2 do
+	 draw_opt(a, i)
 	end
+end
+
+function draw_opt(a,i)
+ local c=classes[i+1]
+ if (c.cost == nil) return
+ local y=i*12
+ local w=24
+ local x=64-a.sign*(64-w*0.6)-w/2 
+ rectfill(x,y-2,x+w,y+8,2)
+ spr(c.spr,x+1,y)
+ local col=5
+ if (a.selected==i) col=7
+ print(c.cost.."◆",x+9,y,10)
+ rect(x,y-2,x+w,y+8,col)
 end
 
 function draw_soldier(s)
