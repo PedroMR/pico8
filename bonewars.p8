@@ -8,6 +8,7 @@ local turbo_mult=1
 local tw=16
 local th=16
 local spawn_y=80
+local buy_cooldown=10
 
 local army1={sign=1}
 local army2={sign=-1}
@@ -32,7 +33,7 @@ local classes={
  {
   name="bow",
   spr=22,
-  cost=30,
+  cost=20,
   attspr=6,
   hp=35,
   tpa=19,
@@ -47,8 +48,8 @@ local classes={
 }
 
 function init_game()
- army1={sign= 1, gp=0, selected=1}
- army2={sign=-1, gp=0, selected=1}
+ army1={sign= 1, gp=0, selected=1, ttbuy=0}
+ army2={sign=-1, gp=0, selected=1, ttbuy=0}
  proj={}
  spots={}
 	local tower1={x=8,y=spawn_y-8,c=1}
@@ -121,7 +122,7 @@ function upd_army(army)
 	for s in all(army) do
 	 upd_soldier(s)
 	end
-	army.gp+=0.2
+	army.gp+=0.1
 end
 
 function upd_soldier(s)
@@ -218,17 +219,22 @@ function upd_army_btn(a,p)
  if (btnp(3,p)) a.selected+=1 
  
  a.selected=(a.selected+2-1)%2+1
+ a.ttbuy -= 1
  
- if (btnp(5,p)) buy_soldier(a)
+ if (btnp(5,p)) then
+	 buy_soldier(a)
+ end
 end
 
 function buy_soldier(a)
+ if (a.ttbuy>0) return
  local cidx=a.selected+1
  local c=classes[cidx]
  if (c.cost == nil or c.cost>a.gp) return
  a.gp -= c.cost
 	local s={x=a.tower.x,y=spawn_y,c=cidx,ttm=0}
 	army_add(a,s)
+	a.ttbuy=buy_cooldown
 end
 
 function fire_arrow()
