@@ -16,34 +16,65 @@ init_game()
 -->8
 --update
 
-lvl={spawn={
- {e=1,x=20,y=-20},
- {e=1,x=20,y=-30}
-}}
+local ypos=-20
+lvl={spawn={}}
+add(lvl.spawn, {e=1,b=1,x=30,y=ypos})
+ypos-=5
+add(lvl.spawn, {e=1,b=1,x=30,y=ypos})
+ypos-=5
+add(lvl.spawn, {e=1,b=1,x=30,y=ypos})
+ypos-=20
+add(lvl.spawn, {e=1,b=2,x=98,y=ypos})
+ypos-=5
+add(lvl.spawn, {e=1,b=2,x=98,y=ypos})
+ypos-=5
+add(lvl.spawn, {e=1,b=2,x=98,y=ypos})
+
 function _update()
  cam.y-=1
  camera(cam.x, cam.y)
  upd_input()
  upd_spawn()
+ upd_enemies()
 end
 
 function upd_spawn()
  for i,v in pairs(lvl.spawn) do
- 	if v.y <= cam.y then
+ 	if v.y >= cam.y then
  	 spawn(v)
  	end
  end
  for i,v in pairs(lvl.spawn) do
- 	if v.y <= cam.y then
- 	 deli(lvl.spawn,i)
+ 	if v.y >= cam.y then
+ 	 del(lvl.spawn,v)
  	end
  end
 end
 
 function spawn(s)
- a={e=s.e,x=s.x,y=s.y}
+ a={e=s.e,x=s.x,y=s.y,b=s.b}
  if(s.e==1) a.s=7
  add(actors,a)
+end
+
+function upd_enemies()
+ for i,v in pairs(actors) do
+ 	if (v.b==1) then
+ 	 v.y+=1
+ 		if (v.y >= cam.y+50) then
+ 			v.x-=1
+ 		end
+ 	end
+ 	if (v.b==2) then
+ 	 v.y+=1
+ 		if (v.y >= cam.y+50) then
+ 			v.x+=1
+ 		end
+ 	end
+ end
+ for i,v in pairs(actors) do  	
+ 	if (v.y-cam.y > 128) del(actors,v)
+ end
 end
 
 function upd_input()
@@ -104,6 +135,8 @@ function _draw()
  	spr(b.s,b.x,b.y)
  end
  --enemy bullets
+ 
+ print(#actors.." cy:"..cam.y,cam.x,cam.y+120)
 end
 __gfx__
 00000000000660000007700000066000000000000000000000000000044444400000000000000000000000000000000000000000000000000000000000000000
