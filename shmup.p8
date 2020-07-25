@@ -7,19 +7,19 @@ x0=margin
 x1=128-margin
 
 local lvl_ypos=-20
-function add_w3e1(r)
+function add_w5e1(r)
  local x=20+x0
  if (r) x=128-x
- for i=1,3 do
-		add(lvl.spawn, {e=1,b=1,x=x,y=lvl_ypos})
+ for i=1,5 do
+		add(lvl.spawn, {e=1,b=1,x=x,y=lvl_ypos,hp=3})
 		lvl_ypos-=10
  end
- lvl_ypos-=35
+ lvl_ypos-=20
 end
 
 lvl={spawn={}}
-add_w3e1(true)
-add_w3e1()
+add_w5e1(true)
+add_w5e1()
 
 function init_game()
 	actors={}
@@ -55,7 +55,7 @@ function upd_spawn()
 end
 
 function spawn(s)
- a={e=s.e,x=s.x,y=s.y,b=s.b,vx=0,vy=0}
+ a={e=s.e,x=s.x,y=s.y,b=s.b,vx=0,vy=0,hp=s.hp}
  if(s.e==1) a.s=7
  add(actors,a)
 end
@@ -64,7 +64,7 @@ function upd_enemies()
  for i,v in pairs(actors) do
  	if (v.b==1) then
  	 v.y+=0
- 		if (v.vx==0 and v.y >= cam.y+50) then 		
+ 		if (v.vx==0 and v.y>=cam.y+100) then
  		 local dx=-2
  		 if (v.x < 64) dx=2
  		 v.vx=dx
@@ -101,16 +101,29 @@ function upd_input()
 	pl.next_shot-=1;
  
  if btn(5) and pl.next_shot <= 0 then
-   pl.next_shot=4
-   add(pl_bul, {s=4,x=pl.x-4,y=pl.y+3,vy=-3})
-   add(pl_bul, {s=4,x=pl.x+4,y=pl.y+3,vy=-3})
+   pl.next_shot=6
+   add(pl_bul, {s=4,x=pl.x-4,y=pl.y+3,vy=-5})
+   add(pl_bul, {s=4,x=pl.x+4,y=pl.y+3,vy=-5})
  end
 
  for i,b in pairs(pl_bul) do
  	b.y += b.vy
- end
+ 	
+ 	for j,e in pairs(actors) do
+ 	 if abs(b.x-e.x)<6 and
+ 	 	  abs(b.y-e.y)<4 then
+ 	 	e.hp -= 1
+ 	 	e.hit=true
+ 	 	deli(pl_bul,i)
+ 	 	break
+ 	 end
+ 	end
+ end  
  for i,b in pairs(pl_bul) do
   if (b.y<cam.y) deli(pl_bul,i)
+ end
+ for i,e in pairs(actors) do
+  if (e.hp <= 0)	deli(actors,i)
  end
 
 end
@@ -119,13 +132,22 @@ end
 -->8
 -- draw
 
+function flash_pain()
+ for i=1,15 do
+  pal(i,7)
+ end
+end
+
 function _draw()
  cls()
  camera(cam.x, cam.y)
  clip(x0,0,x1-x0+1,128)
  --enemies
  for i,a in pairs(actors) do
+  if(a.hit) flash_pain()
   spr(a.s,a.x,a.y)
+  pal()
+  a.hit = false
  end
  -- player
 	spr(pl.s,pl.x,pl.y)
