@@ -47,6 +47,8 @@ __lua__
 -------------------------------
 function _init()
  joex,joey=40,80
+ joevy,joevx=0,0
+ lastjoevx=0
 	--direction and walk anim
 	north=1
 	east=2
@@ -111,7 +113,7 @@ function _init()
  edelta=abs(ease[1]-ease[2])/8
  edir=1
  shipx=0
- music(0)
+ --music(0)
 
 end
 
@@ -216,13 +218,40 @@ function _update60()
  framedelay-=1
  if (framedelay==0) then
   twoframe = (twoframe+1) % 2 --two frame anims
+  threeframe = (threeframe+1) % 3 --two frame anims
+  fourframe = (fourframe+1) % 4 -- four frame anims
+  fiveframe = (fiveframe+1) % 5 -- five frame anims
+  sixframe = (sixframe+1) % 6 -- six frame anims
   framedelay=maxdelay
  end
+ if (joegnd()) joevx *= 0.5
+ if (abs(joevx) < 0.2) joevx=0
+ local dvx=0.5
+ if (joegnd()) dvx=1.5
  if btn(⬅️) then
-  joex-=1
+  joevx-=dvx
  elseif btn(➡️) then
-  joex+=1
+  joevx+=dvx
  end
+ joevx=max(min(joevx,2),-2)
+ joex+=joevx
+ if btn(⬆️) then
+  if joegnd() then
+   joevy=-5
+  end
+ end
+ if joegnd() then
+  if (joevy>0) joevy=0
+ else
+  joevy=min(joevy+0.5,5)
+ end
+ joey+=joevy
+ 
+ --old_update60()
+end
+
+function joegnd()
+ return joey>=80
 end
 
 function old_update60()
@@ -341,7 +370,23 @@ end
 function _draw()
  cls()
  printc("hello",40,9)
-  spr((128+twoframe),joex,joey)
+
+ local jf=false
+ local jw,jh=1,1
+ frame=(128+twoframe)
+ jf = (lastjoevx<0) 
+ if abs(joevx)>0 then
+  if joegnd() then
+  	frame=144+fourframe
+  else
+   frame=130+twoframe
+  end
+  if (joevx<0) jf=true
+ end
+ spr(frame,joex,joey,jw,jh,jf)
+ 
+ if(joevx~=0) lastjoevx=joevx
+ --old_draw()
 end
 
 function old_draw()
