@@ -21,6 +21,8 @@ end
 lvl={spawn={}}
 add_w5e1(true)
 add_w5e1()
+add_w5e1(true)
+add_w5e1()
 
 function init_game()
 	actors={}
@@ -187,8 +189,8 @@ function _draw()
  rectfill(x1,0,x1+2,128,7)
  -- hp bar
  print("♥",0,1,11)
- rectfill(9,1,pl.hpmax,4,0)
- rectfill(9,1,pl.hp,4,11)
+ rectfill(9,1,pl.hpmax+9,4,0)
+ rectfill(9,1,max(pl.hp,0)+9,4,11)
  
  local p=99
  if(firstene~=nil) p = firstene.hp

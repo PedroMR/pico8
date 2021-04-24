@@ -49,7 +49,13 @@ function _init()
  joex,joey=40,80
  joevy,joevx=0,0
  joejustjumped=0
+ joewasonground=0
  lastjoevx=0
+ 
+ enemies={}
+ local es=0.25
+ add(enemies, {x=0,y=80,vx=es,vy=0})
+ 
 	--direction and walk anim
 	north=1
 	east=2
@@ -65,7 +71,7 @@ function _init()
 	fourframe=1 -- four frame anims
  fiveframe=3 -- five frame anims
  sixframe=4 -- six frame anims
- maxdelay=16
+ maxdelay=8
  framedelay=maxdelay-1
  
  frame60=0
@@ -226,7 +232,11 @@ function _update60()
   framedelay=maxdelay
  end
  joejustjumped-=1
- if (joegnd()) joevx *= 0.5
+ joewasonground-=1
+ if (joegnd()) then
+  joevx *= 0.5
+  joewasonground=2
+ end
  if (abs(joevx) < 0.2) joevx=0
  local dvx=0.25
  if (joegnd()) dvx=1
@@ -240,20 +250,26 @@ function _update60()
  if(joewall()) then
 	 joex=8*flr(joex/8+0.5)
  end 
- if btn(⬆️) then
-  if joegnd() then
-			joejustjumped=2
-   joevy=-3
-  end
+ if btn(⬆️) and joewasonground>0 then
+		joejustjumped=8
+  joevy=-3
  end
  if joegnd() then
   if (joevy>0) joevy=0
  else
-  joevy=min(joevy+0.25,5)
+  joevy=min(joevy+0.2,3)
  end
  joey+=joevy
  if (joegnd()) joey-=joey%8
- --old_update60()
+ update_enemies()
+-- old_update60()
+end
+
+function update_enemies()
+ for e in all(enemies) do
+  e.x+=e.vx
+  e.y+=e.vy
+ end 
 end
 
 function joewall()
@@ -419,8 +435,16 @@ function _draw()
  spr(frame,joex,joey,jw,jh,jf)
  
  if(joevx~=0) lastjoevx=joevx
- --old_draw()
+ draw_enemies()
+-- old_draw()
 end
+
+function draw_enemies()
+ for v in all(enemies) do
+	 drw_shr(v.x,v.y,fiveframe)
+ end 
+end
+
 
 function old_draw()
  cls()
@@ -691,49 +715,54 @@ end
 
 -------------------------------
 function draw_spinner()
+ drw_shr(30,30,fiveframe)
+end
+
+function drw_shr(x,y,frame)
+ frame=frame%5
  -- spinner
- if (fiveframe==0) then
+ if (frame==0) then
   --pal (7,0) -- white
   palt(13,true) -- grayple
   palt(1,true) -- dk blue
   palt(2,true) -- dk pruple
   palt(5,true) -- dk gray
-  spr(0,30,30)
+  spr(0,x,y)
   palt()
- elseif (fiveframe==1) then
+ elseif (frame==1) then
   palt(7,true) -- white
   pal (13,7) -- grayple
   palt(1,true) -- dk blue
   palt(2,true) -- dk pruple
   palt(5,true) -- dk gray
-  spr(0,30,30)
+  spr(0,x,y)
   pal()
   palt()
- elseif (fiveframe==2) then
+ elseif (frame==2) then
   palt(7,true) -- white
   palt(13,true) -- grayple
   pal(1,7) -- dk blue
   palt(2,true) -- dk pruple
   palt(5,true) -- dk gray
-  spr(0,30,30)
+  spr(0,x,y)
   pal()
   palt()
- elseif (fiveframe==3) then
+ elseif (frame==3) then
   palt(7,true) -- white
   palt(13,true) -- grayple
   palt(1,true) -- dk blue
   pal (2,7) -- dk pruple
   palt(5,true) -- dk gray
-  spr(0,30,30)
+  spr(0,x,y)
   pal()
   palt()
- elseif (fiveframe==4) then
+ elseif (frame==4) then
   palt(7,true) -- white
   palt(13,true) -- grayple
   palt(1,true) -- dk blue
   palt(2,true) -- dk pruple
   pal (5,7) -- dk gray
-  spr(0,30,30)
+  spr(0,x,y)
   pal()
   palt()
  end
